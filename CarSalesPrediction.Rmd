@@ -1,0 +1,62 @@
+---
+title: "R Notebook"
+---
+title: "Car Sales Prediction"
+output:
+  html_document: default
+  html_notebook: default
+---
+
+# - Frame
+
+Question
+* What will be the car sales for the remaining months of year 2017
+
+
+# - Acquire
+
+I have chosen to scrape data from Kaggle "Norway_new_car_sales_by_month"
+
+
+```{r}
+carSales<-read.csv("new_car_sales_by_month.csv",header = TRUE, stringsAsFactors = FALSE)
+str(carSales)
+
+```
+#Transform
+```{r}
+historicData <- ts(carSales$Quantity, frequency=12, start=c(2007,1), end = c(2017,1))
+historicData
+```
+#Explore
+```{r}
+library('zoo')
+library('ggplot2')
+carSales<-transform(carSales, Yearmon = as.yearmon(paste(Year, Month, sep = "-")))
+carSales$Date<-as.Date(carSales$Yearmon)
+ggplot(carSales, aes(Date, Quantity))+geom_line()+
+  scale_x_date('Year')+ylab("Total Sales of Cars")+xlab("")+
+  ggtitle("Total Quantity of Cars sold _2007-2017")
+```
+#Model
+```{r}
+trend<-stl(historicData, s.window = "period")
+plot(trend)
+}
+```
+#Insight
+```{r}
+library('forecast')
+carSales2017<-forecast(trend, method = "ets", h=11)
+acf(carSales2017$residuals, lag.max=20)
+Box.test(carSales2017$residuals, lag=20, type="Ljung-Box")
+plot.ts(carSales2017$residuals)  
+```
+#Forecast
+```{r}
+plot.forecast(carSales2017)
+```
+#Forecast by Month
+```{r}
+carSales2017
+```
